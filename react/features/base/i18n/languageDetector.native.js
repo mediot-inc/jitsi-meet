@@ -17,6 +17,10 @@ export default {
     detect() {
         const { LocaleDetector } = NativeModules;
 
+        if (LocaleDetector.locale === 'zh_TW_#Hant') {
+            return 'zhTW';
+        }
+
         return LocaleDetector.locale.replace(/_/, '-');
     },
 
