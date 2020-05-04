@@ -14,7 +14,7 @@ import { SharedDocumentButton } from '../../../etherpad';
 import { AudioRouteButton } from '../../../mobile/audio-mode';
 
 // import { LiveStreamButton, RecordButton } from '../../../recording';
-import { RoomLockButton } from '../../../room-lock';
+// import { RoomLockButton } from '../../../room-lock';
 import { ClosedCaptionButton } from '../../../subtitles';
 import { TileViewButton } from '../../../video-layout';
 
@@ -99,7 +99,7 @@ class OverflowMenu extends Component<Props> {
                 <AudioRouteButton { ...buttonProps } />
                 <ToggleCameraButton { ...buttonProps } />
                 <AudioOnlyButton { ...buttonProps } />
-                <RoomLockButton { ...buttonProps } />
+                {/* <RoomLockButton { ...buttonProps } /> */}
                 <ClosedCaptionButton { ...buttonProps } />
                 {
 
