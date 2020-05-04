@@ -1,5 +1,8 @@
 # Publish sdk
 
+## Notice
+DO NOT USE Yarn! Please use npm to install node modules!!!
+
 ## Prepare
 Should place _jitsi-maven-repository_ and _jitsi-meet-ios-sdk-releases_ besides this project, eg:
 ```
@@ -18,6 +21,7 @@ Should place _jitsi-maven-repository_ and _jitsi-meet-ios-sdk-releases_ besides 
 6. `git push && git push origin android-sdk-<version>`
 
 ## ios
+0. run `brew install coreutils`
 1. Checkout to latest tag in _jitsi-meet-ios-sdk-release_
 2. Do `pod install` in _ios_ directory
 3. Bump version in _ios/sdk/src/Info.plist_
