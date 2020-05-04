@@ -17,7 +17,13 @@ export default {
     detect() {
         const { LocaleDetector } = NativeModules;
 
-        if (LocaleDetector.locale === 'zh_TW_#Hant') {
+        if (
+            // android
+            LocaleDetector.locale === 'zh_TW_#Hant'
+
+            // ios
+            || LocaleDetector.locale === 'zh-Hant-TW'
+        ) {
             return 'zhTW';
         }
 
