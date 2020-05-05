@@ -13,6 +13,7 @@ Should place _jitsi-maven-repository_ and _jitsi-meet-ios-sdk-releases_ besides 
 ```
 
 ## android
+0. go to maven website and download / install Maven `3.6.3`
 1. Bump version in _android/gradle.properties_
 2. Commit _android/gradle.properties_
 3. `GIT_TAG=1 ./android/scripts/release-sdk.sh`
