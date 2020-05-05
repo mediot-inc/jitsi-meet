@@ -427,7 +427,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/../Pods/Target Support Files/Pods-JitsiMeet/Pods-JitsiMeet-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-JitsiMeet/Pods-JitsiMeet-resources.sh",
 				"${PODS_ROOT}/Amplitude-iOS/Amplitude/api.amplitude.com.der",
 				"${PODS_ROOT}/Amplitude-iOS/Amplitude/ComodoCaLimitedRsaCertificationAuthority.der",
 				"${PODS_ROOT}/Amplitude-iOS/Amplitude/ComodoRsaCA.der",
@@ -444,7 +444,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/../Pods/Target Support Files/Pods-JitsiMeet/Pods-JitsiMeet-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-JitsiMeet/Pods-JitsiMeet-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		DE3D81D6228B50FB00A6C149 /* Bitcode */ = {
