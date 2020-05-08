@@ -21,7 +21,7 @@
         "bluetooth": "藍牙",
         "headphones": "耳機",
         "phone": "電話",
-        "speaker": "發言者"
+        "speaker": "擴音"
     },
     "audioOnly": {
         "audioOnly": "僅用音訊"
@@ -51,7 +51,7 @@
             "popover": "選擇暱稱",
             "title": ""
         },
-        "title": ""
+        "title": "文字訊息"
     },
     "connectingOverlay": {
         "joiningRoom": ""
@@ -571,8 +571,8 @@
         },
         "addPeople": "新增人員到您的通話中",
         "audioOnlyOff": "關閉僅用音訊模式",
-        "audioOnlyOn": "關閉僅用音訊模式",
-        "audioRoute": "選擇聲音裝置",
+        "audioOnlyOn": "僅用音訊模式",
+        "audioRoute": "選擇聲音輸出方式",
         "authenticate": "驗證",
         "callQuality": "管理通話品質",
         "chat": "開啟/關閉 聊天",
