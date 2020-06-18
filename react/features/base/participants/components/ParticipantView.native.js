@@ -15,8 +15,8 @@ import { connect } from '../../redux';
 import type { StyleType } from '../../styles';
 import { TestHint } from '../../testing/components';
 import { getTrackByMediaTypeAndParticipant } from '../../tracks';
-
 import { shouldRenderParticipantVideo } from '../functions';
+
 import styles from './styles';
 
 /**
@@ -143,9 +143,6 @@ class ParticipantView extends Component<Props> {
         switch (connectionStatus) {
         case JitsiParticipantConnectionStatus.INACTIVE:
             messageKey = 'connection.LOW_BANDWIDTH';
-            break;
-        case JitsiParticipantConnectionStatus.INTERRUPTED:
-            messageKey = 'connection.USER_CONNECTION_INTERRUPTED';
             break;
         default:
             return null;

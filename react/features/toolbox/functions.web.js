@@ -1,5 +1,12 @@
 // @flow
 
+import { hasAvailableDevices } from '../base/devices';
+import {
+    isAudioDisabled,
+    isPrejoinPageVisible,
+    isPrejoinVideoDisabled
+} from '../prejoin';
+
 declare var interfaceConfig: Object;
 
 /**
@@ -34,11 +41,43 @@ export function isButtonEnabled(name: string) {
  * otherwise.
  */
 export function isToolboxVisible(state: Object) {
+    const { iAmSipGateway } = state['features/base/config'];
     const {
         alwaysVisible,
         timeoutID,
         visible
     } = state['features/toolbox'];
+    const { audioSettingsVisible, videoSettingsVisible } = state['features/settings'];
 
-    return Boolean(timeoutID || visible || alwaysVisible);
+    return Boolean(!iAmSipGateway && (timeoutID || visible || alwaysVisible
+                                      || audioSettingsVisible || videoSettingsVisible));
+}
+
+/**
+ * Indicates if the audio settings button is disabled or not.
+ *
+ * @param {string} state - The state from the Redux store.
+ * @returns {boolean}
+ */
+export function isAudioSettingsButtonDisabled(state: Object) {
+    const devicesMissing = !hasAvailableDevices(state, 'audioInput')
+          && !hasAvailableDevices(state, 'audioOutput');
+
+    return isPrejoinPageVisible(state)
+        ? devicesMissing || isAudioDisabled(state)
+        : devicesMissing;
+}
+
+/**
+ * Indicates if the video settings button is disabled or not.
+ *
+ * @param {string} state - The state from the Redux store.
+ * @returns {boolean}
+ */
+export function isVideoSettingsButtonDisabled(state: Object) {
+    const devicesMissing = !hasAvailableDevices(state, 'videoInput');
+
+    return isPrejoinPageVisible(state)
+        ? devicesMissing || isPrejoinVideoDisabled(state)
+        : devicesMissing;
 }

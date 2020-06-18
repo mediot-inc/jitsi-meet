@@ -3,8 +3,8 @@
 import React, { Component } from 'react';
 
 import { Watermarks } from '../../base/react';
-import { Captions } from '../../subtitles/';
 import { connect } from '../../base/redux';
+import { Captions } from '../../subtitles/';
 
 declare var interfaceConfig: Object;
 
@@ -63,12 +63,12 @@ class LargeVideo extends Component<Props> {
                         <video
                             autoPlay = { !this.props._noAutoPlayVideo }
                             id = 'largeVideo'
-                            muted = { true } />
+                            muted = { true }
+                            playsInline = { true } /* for Safari on iOS to work */ />
                     </div>
                 </div>
                 { interfaceConfig.DISABLE_TRANSCRIPTION_SUBTITLES
                     || <Captions /> }
-                <span id = 'localConnectionMessage' />
             </div>
         );
     }

@@ -2,8 +2,10 @@
 
 import React from 'react';
 
+import { isMobileBrowser } from '../../base/environment/utils';
 import { translate } from '../../base/i18n';
-import { Platform, Watermarks } from '../../base/react';
+import { Icon, IconWarning } from '../../base/icons';
+import { Watermarks } from '../../base/react';
 import { connect } from '../../base/redux';
 import { CalendarList } from '../../calendar-sync';
 import { RecentList } from '../../recent-list';
@@ -17,6 +19,12 @@ import Tabs from './Tabs';
  * @type {string}
  */
 export const ROOM_NAME_VALIDATE_PATTERN_STR = '^[^?&:\u0022\u0027%#]+$';
+
+/**
+ * Maximum number of pixels corresponding to a mobile layout.
+ * @type {number}
+ */
+const WINDOW_WIDTH_THRESHOLD = 425;
 
 /**
  * The Web container rendering the welcome page.
@@ -110,6 +118,8 @@ class WelcomePage extends AbstractWelcomePage {
      * @returns {void}
      */
     componentDidMount() {
+        super.componentDidMount();
+
         document.body.classList.add('welcome-page');
         document.title = interfaceConfig.APP_NAME;
 
@@ -152,6 +162,7 @@ class WelcomePage extends AbstractWelcomePage {
         const { APP_NAME } = interfaceConfig;
         const showAdditionalContent = this._shouldShowAdditionalContent();
         const showAdditionalToolbarContent = this._shouldShowAdditionalToolbarContent();
+        const showResponsiveText = this._shouldShowResponsiveText();
 
         return (
             <div
@@ -199,13 +210,18 @@ class WelcomePage extends AbstractWelcomePage {
                                     title = { t('welcomepage.roomNameAllowedChars') }
                                     type = 'text'
                                     value = { this.state.room } />
+                                { this._renderInsecureRoomNameWarning() }
                             </form>
                         </div>
                         <div
                             className = 'welcome-page-button'
                             id = 'enter_room_button'
                             onClick = { this._onFormSubmit }>
-                            { t('welcomepage.go') }
+                            {
+                                showResponsiveText
+                                    ? t('welcomepage.goSmall')
+                                    : t('welcomepage.go')
+                            }
                         </div>
                     </div>
                     { this._renderTabs() }
@@ -215,6 +231,22 @@ class WelcomePage extends AbstractWelcomePage {
                         className = 'welcome-page-content'
                         ref = { this._setAdditionalContentRef } />
                     : null }
+            </div>
+        );
+    }
+
+    /**
+     * Renders the insecure room name warning.
+     *
+     * @inheritdoc
+     */
+    _doRenderInsecureRoomNameWarning() {
+        return (
+            <div className = 'insecure-room-name-warning'>
+                <Icon src = { IconWarning } />
+                <span>
+                    { this.props.t('security.insecureRoomNameWarning') }
+                </span>
             </div>
         );
     }
@@ -267,14 +299,11 @@ class WelcomePage extends AbstractWelcomePage {
      * @returns {ReactElement|null}
      */
     _renderTabs() {
-        const isMobileBrowser
-            = Platform.OS === 'android' || Platform.OS === 'ios';
-
-        if (isMobileBrowser) {
+        if (isMobileBrowser()) {
             return null;
         }
 
-        const { _calendarEnabled, t } = this.props;
+        const { _calendarEnabled, _recentListEnabled, t } = this.props;
 
         const tabs = [];
 
@@ -285,10 +314,16 @@ class WelcomePage extends AbstractWelcomePage {
             });
         }
 
-        tabs.push({
-            label: t('welcomepage.recentList'),
-            content: <RecentList />
-        });
+        if (_recentListEnabled) {
+            tabs.push({
+                label: t('welcomepage.recentList'),
+                content: <RecentList />
+            });
+        }
+
+        if (tabs.length === 0) {
+            return null;
+        }
 
         return (
             <Tabs
@@ -362,6 +397,20 @@ class WelcomePage extends AbstractWelcomePage {
             && this._additionalToolbarContentTemplate.content
             && this._additionalToolbarContentTemplate.innerHTML.trim();
     }
+
+    /**
+     * Returns whether or not the screen has a size smaller than a custom margin
+     * and therefore display different text in the go button.
+     *
+     * @private
+     * @returns {boolean}
+     */
+    _shouldShowResponsiveText() {
+        const { innerWidth } = window;
+
+        return innerWidth <= WINDOW_WIDTH_THRESHOLD;
+    }
+
 }
 
 export default translate(connect(_mapStateToProps)(WelcomePage));

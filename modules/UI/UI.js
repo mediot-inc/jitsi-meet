@@ -1,30 +1,30 @@
 /* global APP, $, config, interfaceConfig */
 
-const logger = require('jitsi-meet-logger').getLogger(__filename);
 
 const UI = {};
 
-import messageHandler from './util/MessageHandler';
-import UIUtil from './util/UIUtil';
-import UIEvents from '../../service/UI/UIEvents';
-import EtherpadManager from './etherpad/Etherpad';
-import SharedVideoManager from './shared_video/SharedVideo';
-
-import VideoLayout from './videolayout/VideoLayout';
-import Filmstrip from './videolayout/Filmstrip';
+import EventEmitter from 'events';
+import Logger from 'jitsi-meet-logger';
 
 import { getLocalParticipant } from '../../react/features/base/participants';
 import { toggleChat } from '../../react/features/chat';
 import { setDocumentUrl } from '../../react/features/etherpad';
 import { setFilmstripVisible } from '../../react/features/filmstrip';
-import { setNotificationsEnabled } from '../../react/features/notifications';
+import { joinLeaveNotificationsDisabled, setNotificationsEnabled } from '../../react/features/notifications';
 import {
     dockToolbox,
     setToolboxEnabled,
     showToolbox
 } from '../../react/features/toolbox';
+import UIEvents from '../../service/UI/UIEvents';
 
-const EventEmitter = require('events');
+import EtherpadManager from './etherpad/Etherpad';
+import SharedVideoManager from './shared_video/SharedVideo';
+import messageHandler from './util/MessageHandler';
+import UIUtil from './util/UIUtil';
+import VideoLayout from './videolayout/VideoLayout';
+
+const logger = Logger.getLogger(__filename);
 
 UI.messageHandler = messageHandler;
 
@@ -127,10 +127,6 @@ UI.initConference = function() {
     const { getState } = APP.store;
     const { id, name } = getLocalParticipant(getState);
 
-    // Update default button states before showing the toolbar
-    // if local role changes buttons state will be again updated.
-    UI.updateLocalRole(APP.conference.isModerator);
-
     UI.showToolbar();
 
     const displayName = config.displayJids ? id : name;
@@ -158,8 +154,6 @@ UI.start = function() {
     // Set the defaults for prompt dialogs.
     $.prompt.setDefaults({ persistent: false });
 
-    Filmstrip.init(eventEmitter);
-
     VideoLayout.init(eventEmitter);
     if (!interfaceConfig.filmStripOnly) {
         VideoLayout.initLargeVideo();
@@ -169,7 +163,7 @@ UI.start = function() {
     // resizeVideoArea) because the animation is not visible anyway. Plus with
     // the current dom layout, the quality label is part of the video layout and
     // will be seen animating in.
-    VideoLayout.resizeVideoArea(true, false);
+    VideoLayout.resizeVideoArea();
 
     sharedVideoManager = new SharedVideoManager(eventEmitter);
 
@@ -180,10 +174,10 @@ UI.start = function() {
         // in case of iAmSipGateway keep local video visible
         if (!config.iAmSipGateway) {
             VideoLayout.setLocalVideoVisible(false);
+            APP.store.dispatch(setNotificationsEnabled(false));
         }
 
         APP.store.dispatch(setToolboxEnabled(false));
-        APP.store.dispatch(setNotificationsEnabled(false));
         UI.messageHandler.enablePopups(false);
     }
 };
@@ -202,7 +196,7 @@ UI.bindEvents = () => {
      *
      */
     function onResize() {
-        VideoLayout.resizeVideoArea();
+        VideoLayout.onResize();
     }
 
     // Resize and reposition videos in full screen mode.
@@ -283,44 +277,6 @@ UI.onPeerVideoTypeChanged
     = (id, newVideoType) => VideoLayout.onVideoTypeChanged(id, newVideoType);
 
 /**
- * Update local user role and show notification if user is moderator.
- * @param {boolean} isModerator if local user is moderator or not
- */
-UI.updateLocalRole = isModerator => {
-    VideoLayout.showModeratorIndicator();
-
-    if (isModerator && !interfaceConfig.DISABLE_FOCUS_INDICATOR) {
-        messageHandler.participantNotification(
-            null, 'notify.me', 'connected', 'notify.moderator');
-    }
-};
-
-/**
- * Check the role for the user and reflect it in the UI, moderator ui indication
- * and notifies user who is the moderator
- * @param user to check for moderator
- */
-UI.updateUserRole = user => {
-    VideoLayout.showModeratorIndicator();
-
-    // We don't need to show moderator notifications when the focus (moderator)
-    // indicator is disabled.
-    if (!user.isModerator() || interfaceConfig.DISABLE_FOCUS_INDICATOR) {
-        return;
-    }
-
-    const displayName = user.getDisplayName();
-
-    messageHandler.participantNotification(
-        displayName,
-        'notify.somebody',
-        'connected',
-        'notify.grantedTo',
-        { to: displayName
-            ? UIUtil.escapeHtml(displayName) : '$t(notify.somebody)' });
-};
-
-/**
  * Updates the user status.
  *
  * @param {JitsiParticipant} user - The user which status we need to update.
@@ -330,7 +286,9 @@ UI.updateUserStatus = (user, status) => {
     const reduxState = APP.store.getState() || {};
     const { calleeInfoVisible } = reduxState['features/invite'] || {};
 
-    if (!status || calleeInfoVisible) {
+    // We hide status updates when join/leave notifications are disabled,
+    // as jigasi is the component with statuses and they are seen as join/leave notifications.
+    if (!status || calleeInfoVisible || joinLeaveNotificationsDisabled()) {
         return;
     }
 
@@ -354,12 +312,6 @@ UI.toggleFilmstrip = function() {
 };
 
 /**
- * Checks if the filmstrip is currently visible or not.
- * @returns {true} if the filmstrip is currently visible, and false otherwise.
- */
-UI.isFilmstripVisible = () => Filmstrip.isFilmstripVisible();
-
-/**
  * Toggles the visibility of the chat panel.
  */
 UI.toggleChat = () => APP.store.dispatch(toggleChat());
@@ -369,15 +321,6 @@ UI.toggleChat = () => APP.store.dispatch(toggleChat());
  */
 UI.inputDisplayNameHandler = function(newDisplayName) {
     eventEmitter.emit(UIEvents.NICKNAME_CHANGED, newDisplayName);
-};
-
-/**
- * Return the type of the remote video.
- * @param jid the jid for the remote video
- * @returns the video type video or screen.
- */
-UI.getRemoteVideoType = function(jid) {
-    return VideoLayout.getRemoteVideoType(jid);
 };
 
 // FIXME check if someone user this
@@ -697,10 +640,6 @@ UI.showExtensionInlineInstallationDialog = function(callback) {
         loadedFunction: $.noop,
         closeFunction
     });
-};
-
-UI.updateDevicesAvailability = function(id, devices) {
-    VideoLayout.setDeviceAvailabilityIcons(id, devices);
 };
 
 /**

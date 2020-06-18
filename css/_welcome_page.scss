@@ -38,19 +38,21 @@ body.welcome-page {
 
         .header-text-title {
             color: $welcomePageTitleColor;
-            font-size: 2.5rem;
-            font-weight: 500;
-            line-height: 1.18;
+            font-size: $welcomePageHeaderTextTitleFontSize;
+            font-weight: $welcomePageHeaderTextTitleFontWeight;
+            line-height: $welcomePageHeaderTextTitleLineHeight;
             margin-bottom: $welcomePageHeaderTextTitleMarginBottom;
+            opacity: $welcomePageHeaderTextTitleOpacity;
         }
 
         .header-text-description {
             display: $welcomePageHeaderTextDescriptionDisplay;
             color: $welcomePageDescriptionColor;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 24px;
-            margin-bottom: 20px;
+            font-size: $welcomePageHeaderTextDescriptionFontSize;
+            font-weight: $welcomePageHeaderTextDescriptionFontWeight;
+            line-height: $welcomePageHeaderTextDescriptionLineHeight;
+            margin-bottom: $welcomePageHeaderTextDescriptionMarginBottom;
+            align-self: $welcomePageHeaderTextDescriptionAlignSelf;
         }
 
         #enter_room {
@@ -69,9 +71,6 @@ body.welcome-page {
                 text-align: left;
                 color: #253858;
                 height: fit-content;
-                border-width: $welcomePageEnterRoomInputContainerBorderWidth;
-                border-style: $welcomePageEnterRoomInputContainerBorderStyle;
-                border-image: $welcomePageEnterRoomInputContainerBorderImage;
 
                 .enter-room-title {
                     display: $welcomePageEnterRoomTitleDisplay;
@@ -81,10 +80,24 @@ body.welcome-page {
                 }
 
                 .enter-room-input {
-                    border: none;
+                    border-width: $welcomePageEnterRoomInputContainerBorderWidth;
+                    border-style: $welcomePageEnterRoomInputContainerBorderStyle;
+                    border-image: $welcomePageEnterRoomInputContainerBorderImage;
                     display: inline-block;
                     width: 100%;
                     font-size: 14px;
+                }
+
+                .insecure-room-name-warning {
+                    align-items: center;
+                    color: $defaultWarningColor;
+                    display: flex;
+                    flex-direction: row;
+                    margin-top: 5px;
+
+                    svg {
+                        fill: $defaultWarningColor
+                    }
                 }
 
                 ::placeholder {
@@ -148,8 +161,9 @@ body.welcome-page {
 
     .welcome-page-button {
         width: $welcomePageButtonWidth;
+        min-width: $welcomePageButtonMinWidth;
         height: $welcomePageButtonHeight;
-        font-size: 14px;
+        font-size: $welcomePageButtonFontSize;
         font-weight: $welcomePageButtonFontWeight;
         background: #0074E0;
         border-radius: $welcomePageButtonBorderRadius;

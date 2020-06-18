@@ -8,12 +8,12 @@ import {
 } from '../../analytics';
 import { getName } from '../../app';
 import { endpointMessageReceived } from '../../subtitles';
-
 import { JITSI_CONNECTION_CONFERENCE_KEY } from '../connection';
 import { JitsiConferenceEvents } from '../lib-jitsi-meet';
 import { setAudioMuted, setVideoMuted } from '../media';
 import {
     dominantSpeakerChanged,
+    getLocalParticipant,
     getNormalizedDisplayName,
     participantConnectionStatusChanged,
     participantKicked,
@@ -34,6 +34,7 @@ import {
     CONFERENCE_JOINED,
     CONFERENCE_LEFT,
     CONFERENCE_SUBJECT_CHANGED,
+    CONFERENCE_TIMESTAMP_CHANGED,
     CONFERENCE_WILL_JOIN,
     CONFERENCE_WILL_LEAVE,
     DATA_CHANNEL_OPENED,
@@ -46,7 +47,7 @@ import {
     SET_MAX_RECEIVER_VIDEO_QUALITY,
     SET_PASSWORD,
     SET_PASSWORD_FAILED,
-    SET_PREFERRED_RECEIVER_VIDEO_QUALITY,
+    SET_PREFERRED_VIDEO_QUALITY,
     SET_ROOM,
     SET_PENDING_SUBJECT_CHANGE,
     SET_START_MUTED_POLICY
@@ -92,9 +93,15 @@ function _addConferenceListeners(conference, dispatch) {
         (...args) => dispatch(conferenceJoined(conference, ...args)));
     conference.on(
         JitsiConferenceEvents.CONFERENCE_LEFT,
-        (...args) => dispatch(conferenceLeft(conference, ...args)));
+        (...args) => {
+            dispatch(conferenceTimestampChanged(0));
+            dispatch(conferenceLeft(conference, ...args));
+        });
     conference.on(JitsiConferenceEvents.SUBJECT_CHANGED,
         (...args) => dispatch(conferenceSubjectChanged(...args)));
+
+    conference.on(JitsiConferenceEvents.CONFERENCE_CREATED_TIMESTAMP,
+        (...args) => dispatch(conferenceTimestampChanged(...args)));
 
     conference.on(
         JitsiConferenceEvents.KICKED,
@@ -313,6 +320,22 @@ export function conferenceSubjectChanged(subject: string) {
 }
 
 /**
+* Signals that the conference timestamp has been changed.
+*
+* @param {number} conferenceTimestamp - The UTC timestamp.
+* @returns {{
+*       type: CONFERENCE_TIMESTAMP_CHANGED,
+*       conferenceTimestamp
+* }}
+*/
+export function conferenceTimestampChanged(conferenceTimestamp: number) {
+    return {
+        type: CONFERENCE_TIMESTAMP_CHANGED,
+        conferenceTimestamp
+    };
+}
+
+/**
  * Adds any existing local tracks to a specific conference before the conference
  * is joined. Then signals the intention of the application to have the local
  * participant join the specified conference.
@@ -393,14 +416,18 @@ export function createConference() {
             throw new Error('Cannot join a conference without a room name!');
         }
 
+        const config = state['features/base/config'];
+        const { email, name: nick } = getLocalParticipant(state);
         const conference
             = connection.initJitsiConference(
 
                 getBackendSafeRoomName(room), {
-                    ...state['features/base/config'],
+                    ...config,
                     applicationName: getName(),
                     getWiFiStatsMethod: getJitsiMeetGlobalNS().getWiFiStats,
-                    confID: `${locationURL.host}${locationURL.pathname}`
+                    confID: `${locationURL.host}${locationURL.pathname}`,
+                    statisticsDisplayName: config.enableDisplayNameInStats ? nick : undefined,
+                    statisticsId: config.enableEmailInStats ? email : undefined
                 });
 
         connection[JITSI_CONNECTION_CONFERENCE_KEY] = conference;
@@ -671,21 +698,20 @@ export function setPassword(
 }
 
 /**
- * Sets the max frame height the user prefers to receive from remote participant
- * videos.
+ * Sets the max frame height the user prefers to send and receive from the
+ * remote participants.
  *
- * @param {number} preferredReceiverVideoQuality - The max video resolution to
+ * @param {number} preferredVideoQuality - The max video resolution to send and
  * receive.
  * @returns {{
- *     type: SET_PREFERRED_RECEIVER_VIDEO_QUALITY,
- *     preferredReceiverVideoQuality: number
+ *     type: SET_PREFERRED_VIDEO_QUALITY,
+ *     preferredVideoQuality: number
  * }}
  */
-export function setPreferredReceiverVideoQuality(
-        preferredReceiverVideoQuality: number) {
+export function setPreferredVideoQuality(preferredVideoQuality: number) {
     return {
-        type: SET_PREFERRED_RECEIVER_VIDEO_QUALITY,
-        preferredReceiverVideoQuality
+        type: SET_PREFERRED_VIDEO_QUALITY,
+        preferredVideoQuality
     };
 }
 

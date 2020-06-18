@@ -11,6 +11,7 @@ import {
     participantLeft
 } from '../participants';
 import { toState } from '../redux';
+import { safeDecodeURIComponent } from '../util';
 
 import {
     AVATAR_ID_COMMAND,
@@ -163,7 +164,32 @@ export function getConferenceName(stateful: Function | Object): string {
         || subject
         || callDisplayName
         || (callee && callee.name)
-        || _.startCase(decodeURIComponent(room));
+        || safeStartCase(safeDecodeURIComponent(room));
+}
+
+/**
+ * Returns the name of the conference formated for the title.
+ *
+ * @param {Function | Object} stateful - Reference that can be resolved to Redux state with the {@code toState}
+ * function.
+ * @returns {string} - The name of the conference formated for the title.
+ */
+export function getConferenceNameForTitle(stateful: Function | Object) {
+    return safeStartCase(safeDecodeURIComponent(toState(stateful)['features/base/conference'].room));
+}
+
+/**
+* Returns the UTC timestamp when the first participant joined the conference.
+*
+* @param {Function | Object} stateful - Reference that can be resolved to Redux
+* state with the {@code toState} function.
+* @returns {number}
+*/
+export function getConferenceTimestamp(stateful: Function | Object): number {
+    const state = toState(stateful);
+    const { conferenceTimestamp } = state['features/base/conference'];
+
+    return conferenceTimestamp;
 }
 
 /**
@@ -177,13 +203,15 @@ export function getConferenceName(stateful: Function | Object): string {
  * @returns {JitsiConference|undefined}
  */
 export function getCurrentConference(stateful: Function | Object) {
-    const { conference, joining, leaving }
+    const { conference, joining, leaving, passwordRequired }
         = toState(stateful)['features/base/conference'];
 
-    return (
-        conference
-            ? conference === leaving ? undefined : conference
-            : joining);
+    // There is a precendence
+    if (conference) {
+        return conference === leaving ? undefined : conference;
+    }
+
+    return joining || passwordRequired;
 }
 
 /**
@@ -216,6 +244,16 @@ export function getNearestReceiverVideoQualityLevel(availableHeight: number) {
     }
 
     return selectedLevel;
+}
+
+/**
+ * Returns the stored room name.
+ *
+ * @param {Object} state - The current state of the app.
+ * @returns {string}
+ */
+export function getRoomName(state: Object): string {
+    return state['features/base/conference'].room;
 }
 
 /**
@@ -333,4 +371,20 @@ export function sendLocalParticipant(
     }
 
     conference.setDisplayName(name);
+}
+
+/**
+ * A safe implementation of lodash#startCase that doesn't deburr the string.
+ *
+ * NOTE: According to lodash roadmap, lodash v5 will have this function.
+ *
+ * Code based on https://github.com/lodash/lodash/blob/master/startCase.js.
+ *
+ * @param {string} s - The string to do start case on.
+ * @returns {string}
+ */
+function safeStartCase(s = '') {
+    return _.words(`${s}`.replace(/['\u2019]/g, '')).reduce(
+        (result, word, index) => result + (index ? ' ' : '') + _.upperFirst(word)
+        , '');
 }

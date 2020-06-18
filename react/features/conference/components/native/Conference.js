@@ -1,7 +1,7 @@
 // @flow
 
 import React from 'react';
-import { NativeModules, SafeAreaView, StatusBar, View } from 'react-native';
+import { NativeModules, SafeAreaView, StatusBar } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
 import { appNavigate } from '../../../app';
@@ -23,21 +23,22 @@ import {
     isFilmstripVisible,
     TileView
 } from '../../../filmstrip';
+import { AddPeopleDialog, CalleeInfoContainer } from '../../../invite';
 import { LargeVideo } from '../../../large-video';
 import { BackButtonRegistry } from '../../../mobile/back-button';
-import { AddPeopleDialog, CalleeInfoContainer } from '../../../invite';
 import { Captions } from '../../../subtitles';
 import { isToolboxVisible, setToolboxVisible, Toolbox } from '../../../toolbox';
-
 import {
     AbstractConference,
     abstractMapStateToProps
 } from '../AbstractConference';
+import type { AbstractProps } from '../AbstractConference';
+
 import Labels from './Labels';
+import LonelyMeetingExperience from './LonelyMeetingExperience';
 import NavigationBar from './NavigationBar';
 import styles, { NAVBAR_GRADIENT_COLORS } from './styles';
 
-import type { AbstractProps } from '../AbstractConference';
 
 /**
  * The type of the React {@code Component} props of {@link Conference}.
@@ -213,6 +214,19 @@ class Conference extends AbstractConference<Props, *> {
     }
 
     /**
+     * Renders JitsiModals that are supposed to be on the conference screen.
+     *
+     * @returns {Array<ReactElement>}
+     */
+    _renderConferenceModals() {
+        return [
+            <AddPeopleDialog key = 'addPeopleDialog' />,
+            <Chat key = 'chat' />,
+            <SharedDocument key = 'sharedDocument' />
+        ];
+    }
+
+    /**
      * Renders the conference notification badge if the feature is enabled.
      *
      * @private
@@ -251,10 +265,6 @@ class Conference extends AbstractConference<Props, *> {
 
         return (
             <>
-                <AddPeopleDialog />
-                <Chat />
-                <SharedDocument />
-
                 {/*
                   * The LargeVideo is the lowermost stacking layer.
                   */
@@ -279,7 +289,7 @@ class Conference extends AbstractConference<Props, *> {
                         </TintedView>
                 }
 
-                <View
+                <SafeAreaView
                     pointerEvents = 'box-none'
                     style = { styles.toolboxAndFilmstripContainer }>
 
@@ -305,6 +315,8 @@ class Conference extends AbstractConference<Props, *> {
 
                     { _shouldDisplayTileView || <DisplayNameLabel participantId = { _largeVideoParticipantId } /> }
 
+                    <LonelyMeetingExperience />
+
                     {/*
                       * The Toolbox is in a stacking layer below the Filmstrip.
                       */}
@@ -320,7 +332,7 @@ class Conference extends AbstractConference<Props, *> {
                       */
                         _shouldDisplayTileView ? undefined : <Filmstrip />
                     }
-                </View>
+                </SafeAreaView>
 
                 <SafeAreaView
                     pointerEvents = 'box-none'
@@ -332,6 +344,8 @@ class Conference extends AbstractConference<Props, *> {
                 <TestConnectionInfo />
 
                 { this._renderConferenceNotification() }
+
+                { this._renderConferenceModals() }
             </>
         );
     }

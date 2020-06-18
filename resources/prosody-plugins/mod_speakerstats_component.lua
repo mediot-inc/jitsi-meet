@@ -1,9 +1,18 @@
 local get_room_from_jid = module:require "util".get_room_from_jid;
+local room_jid_match_rewrite = module:require "util".room_jid_match_rewrite;
+local is_healthcheck_room = module:require "util".is_healthcheck_room;
 local jid_resource = require "util.jid".resource;
 local ext_events = module:require "ext_events"
 local st = require "util.stanza";
 local socket = require "socket";
 local json = require "util.json";
+
+-- we use async to detect Prosody 0.10 and earlier
+local have_async = pcall(require, "util.async");
+if not have_async then
+    module:log("warn", "speaker stats will not work with Prosody version 0.10 or less.");
+    return;
+end
 
 local muc_component_host = module:get_option_string("muc_component");
 if muc_component_host == nil then
@@ -25,7 +34,7 @@ function on_message(event)
         = event.stanza:get_child('speakerstats', 'http://jitsi.org/jitmeet');
     if speakerStats then
         local roomAddress = speakerStats.attr.room;
-        local room = get_room_from_jid(roomAddress);
+        local room = get_room_from_jid(room_jid_match_rewrite(roomAddress));
 
         if not room then
             log("warn", "No room found %s", roomAddress);
@@ -45,7 +54,10 @@ function on_message(event)
         local oldDominantSpeakerId = roomSpeakerStats['dominantSpeakerId'];
 
         if oldDominantSpeakerId then
-            roomSpeakerStats[oldDominantSpeakerId]:setDominantSpeaker(false);
+            local oldDominantSpeaker = roomSpeakerStats[oldDominantSpeakerId];
+            if oldDominantSpeaker then
+                oldDominantSpeaker:setDominantSpeaker(false);
+            end
         end
 
         if newDominantSpeaker then
@@ -62,11 +74,12 @@ end
 local SpeakerStats = {};
 SpeakerStats.__index = SpeakerStats;
 
-function new_SpeakerStats(nick)
+function new_SpeakerStats(nick, context_user)
     return setmetatable({
         totalDominantSpeakerTime = 0;
         _dominantSpeakerStart = 0;
         nick = nick;
+        context_user = context_user;
         displayName = nil;
     }, SpeakerStats);
 end
@@ -99,13 +112,24 @@ end
 -- create speakerStats for the room
 function room_created(event)
     local room = event.room;
+
+    if is_healthcheck_room(room.jid) then
+        return;
+    end
+
     room.speakerStats = {};
 end
 
 -- Create SpeakerStats object for the joined user
 function occupant_joined(event)
     local room = event.room;
+
+    if is_healthcheck_room(room.jid) then
+        return;
+    end
+
     local occupant = event.occupant;
+
     local nick = jid_resource(occupant.nick);
 
     if room.speakerStats then
@@ -150,7 +174,8 @@ function occupant_joined(event)
             room:route_stanza(stanza);
         end
 
-        room.speakerStats[occupant.jid] = new_SpeakerStats(nick);
+        local context_user = event.origin and event.origin.jitsi_meet_context_user or nil;
+        room.speakerStats[occupant.jid] = new_SpeakerStats(nick, context_user);
     end
 end
 
@@ -158,6 +183,11 @@ end
 -- display name
 function occupant_leaving(event)
     local room = event.room;
+
+    if is_healthcheck_room(room.jid) then
+        return;
+    end
+
     local occupant = event.occupant;
 
     local speakerStatsForOccupant = room.speakerStats[occupant.jid];
@@ -174,6 +204,10 @@ end
 -- Conference ended, send speaker stats
 function room_destroyed(event)
     local room = event.room;
+
+    if is_healthcheck_room(room.jid) then
+        return;
+    end
 
     ext_events.speaker_stats(room, room.speakerStats);
 end

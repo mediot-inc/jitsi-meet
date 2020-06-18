@@ -288,6 +288,7 @@ public class JitsiMeetConferenceOptions implements Parcelable {
     }
 
     private JitsiMeetConferenceOptions(Parcel in) {
+        serverURL = (URL) in.readSerializable();
         room = in.readString();
         subject = in.readString();
         token = in.readString();
@@ -349,7 +350,7 @@ public class JitsiMeetConferenceOptions implements Parcelable {
             urlProps.putString("jwt", token);
         }
 
-        if (token == null && userInfo != null) {
+        if (userInfo != null) {
             props.putBundle("userInfo", userInfo.asBundle());
         }
 
@@ -376,6 +377,7 @@ public class JitsiMeetConferenceOptions implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeSerializable(serverURL);
         dest.writeString(room);
         dest.writeString(subject);
         dest.writeString(token);

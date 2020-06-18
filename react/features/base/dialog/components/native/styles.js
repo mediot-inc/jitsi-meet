@@ -4,7 +4,6 @@ import { StyleSheet } from 'react-native';
 
 import { ColorSchemeRegistry, schemeColor } from '../../../color-scheme';
 import { BoxModel, ColorPalette } from '../../../styles';
-
 import { PREFERRED_DIALOG_SIZE } from '../../constants';
 
 const BORDER_RADIUS = 5;
@@ -33,6 +32,10 @@ export const bottomSheetStyles = {
         flex: 1
     },
 
+    scrollView: {
+        paddingHorizontal: MD_ITEM_MARGIN_PADDING
+    },
+
     /**
      * Style for the container of the sheet.
      */
@@ -44,9 +47,7 @@ export const bottomSheetStyles = {
     },
 
     sheetItemContainer: {
-        flex: -1,
-        maxHeight: '60%',
-        paddingHorizontal: MD_ITEM_MARGIN_PADDING
+        flex: -1
     }
 };
 
@@ -135,23 +136,45 @@ export const inputDialog = {
  * {@link https://material.io/guidelines/components/bottom-sheets.html}.
  */
 ColorSchemeRegistry.register('BottomSheet', {
-    /**
-     * Style for the {@code Icon} element in a generic item of the menu.
-     */
-    iconStyle: {
-        color: schemeColor('icon'),
-        fontSize: 24
+    buttons: {
+        /**
+         * Style for the {@code Icon} element in a generic item of the menu.
+         */
+        iconStyle: {
+            color: schemeColor('icon'),
+            fontSize: 24
+        },
+
+        /**
+         * Style for the label in a generic item rendered in the menu.
+         */
+        labelStyle: {
+            color: schemeColor('text'),
+            flexShrink: 1,
+            fontSize: MD_FONT_SIZE,
+            marginLeft: 32,
+            opacity: 0.90
+        },
+
+        /**
+         * Container style for a generic item rendered in the menu.
+         */
+        style: {
+            alignItems: 'center',
+            flexDirection: 'row',
+            height: MD_ITEM_HEIGHT
+        },
+
+        /**
+         * Additional style that is not directly used as a style object.
+         */
+        underlayColor: ColorPalette.overflowMenuItemUnderlay
     },
 
-    /**
-     * Style for the label in a generic item rendered in the menu.
-     */
-    labelStyle: {
-        color: schemeColor('text'),
-        flexShrink: 1,
-        fontSize: MD_FONT_SIZE,
-        marginLeft: 32,
-        opacity: 0.90
+    expandIcon: {
+        color: schemeColor('icon'),
+        fontSize: 48,
+        opacity: 0.8
     },
 
     /**
@@ -159,21 +182,7 @@ ColorSchemeRegistry.register('BottomSheet', {
      */
     sheet: {
         backgroundColor: schemeColor('background')
-    },
-
-    /**
-     * Container style for a generic item rendered in the menu.
-     */
-    style: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        height: MD_ITEM_HEIGHT
-    },
-
-    /**
-     * Additional style that is not directly used as a style object.
-     */
-    underlayColor: ColorPalette.overflowMenuItemUnderlay
+    }
 });
 
 /**

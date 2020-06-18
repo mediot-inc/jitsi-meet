@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 
 import { translate } from '../../../base/i18n';
 
-import styles, { ANDROID_UNDERLINE_COLOR } from './styles';
+import styles, { ANDROID_UNDERLINE_COLOR, PLACEHOLDER_COLOR } from './styles';
 
 /**
  * The type of the React {@code Component} props of {@link FormRow}
@@ -26,6 +26,11 @@ type Props = {
      * The i18n key of the text label of the form field.
      */
     label: string,
+
+    /**
+     * One of 'row' (default) or 'column'.
+     */
+    layout: string,
 
     /**
      * Invoked to obtain translated strings.
@@ -60,7 +65,7 @@ class FormRow extends Component<Props> {
      * @returns {ReactElement}
      */
     render() {
-        const { t } = this.props;
+        const { layout, t } = this.props;
 
         // Some field types need additional props to look good and standardized
         // on a form.
@@ -76,7 +81,8 @@ class FormRow extends Component<Props> {
                     <Text
                         style = { [
                             styles.text,
-                            styles.fieldLabelText
+                            styles.fieldLabelText,
+                            layout === 'column' ? styles.fieldLabelTextColumn : undefined
                         ] } >
                         { t(this.props.label) }
                     </Text>
@@ -107,7 +113,11 @@ class FormRow extends Component<Props> {
             switch (field.type.displayName) {
             case 'TextInput':
                 return {
-                    style: styles.textInputField,
+                    placeholderTextColor: PLACEHOLDER_COLOR,
+                    style: [
+                        styles.textInputField,
+                        this.props.layout === 'column' ? styles.textInputFieldColumn : undefined
+                    ],
                     underlineColorAndroid: ANDROID_UNDERLINE_COLOR
                 };
             }
@@ -125,12 +135,19 @@ class FormRow extends Component<Props> {
      * @returns {Array<Object>}
      */
     _getRowStyle() {
+        const { fieldSeparator, layout } = this.props;
         const rowStyle = [
             styles.fieldContainer
         ];
 
-        if (this.props.fieldSeparator) {
+        if (fieldSeparator) {
             rowStyle.push(styles.fieldSeparator);
+        }
+
+        if (layout === 'column') {
+            rowStyle.push(
+                styles.fieldContainerColumn
+            );
         }
 
         return rowStyle;

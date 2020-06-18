@@ -2,6 +2,10 @@
 
 import { NativeModules } from 'react-native';
 
+import LANGUAGES_RESOURCES from '../../../../lang/languages.json';
+
+const LANGUAGES = Object.keys(LANGUAGES_RESOURCES);
+
 /**
  * The singleton language detector for React Native which uses the system-wide
  * locale.
@@ -16,18 +20,22 @@ export default {
 
     detect() {
         const { LocaleDetector } = NativeModules;
+        const [ lang, region ] = LocaleDetector.locale.replace(/_/, '-').split('-');
+        const locale = `${lang}${region}`;
+
+        if (LANGUAGES.includes(locale)) {
+            return locale;
+        }
 
         if (
             // android
             LocaleDetector.locale === 'zh_TW_#Hant'
-
             // ios
             || LocaleDetector.locale === 'zh-Hant-TW'
         ) {
             return 'zhTW';
         }
-
-        return LocaleDetector.locale.replace(/_/, '-');
+        return lang;
     },
 
     init: Function.prototype,

@@ -23,12 +23,6 @@ export default {
         width: 32
     },
 
-    chatContainer: {
-        alignItems: 'stretch',
-        flex: 1,
-        flexDirection: 'column'
-    },
-
     chatLink: {
         color: ColorPalette.blue
     },
@@ -40,6 +34,13 @@ export default {
         alignItems: 'flex-start',
         flex: 1,
         flexDirection: 'column'
+    },
+
+    emptyComponentWrapper: {
+        alignSelf: 'center',
+        flex: 1,
+        padding: BoxModel.padding,
+        paddingTop: '10%'
     },
 
     /**
@@ -141,6 +142,11 @@ ColorSchemeRegistry.register('Chat', {
     displayName: {
         color: schemeColor('displayName'),
         fontSize: 13
+    },
+
+    emptyComponentText: {
+        color: schemeColor('displayName'),
+        textAlign: 'center'
     },
 
     localMessageBubble: {

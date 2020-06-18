@@ -1,18 +1,16 @@
 // @flow
 
-import { reloadNow } from '../../app';
-import { openDisplayNamePrompt } from '../../display-name';
-
 import {
     ACTION_PINNED,
     ACTION_UNPINNED,
-    createConnectionEvent,
     createOfferAnswerFailedEvent,
     createPinnedEvent,
     sendAnalytics
 } from '../../analytics';
+import { openDisplayNamePrompt } from '../../display-name';
 import { CONNECTION_ESTABLISHED, CONNECTION_FAILED } from '../connection';
 import { JitsiConferenceErrors } from '../lib-jitsi-meet';
+import { MEDIA_TYPE } from '../media';
 import {
     getLocalParticipant,
     getParticipantById,
@@ -24,12 +22,6 @@ import { MiddlewareRegistry, StateListenerRegistry } from '../redux';
 import { TRACK_ADDED, TRACK_REMOVED } from '../tracks';
 
 import {
-    conferenceFailed,
-    conferenceWillLeave,
-    createConference,
-    setSubject
-} from './actions';
-import {
     CONFERENCE_FAILED,
     CONFERENCE_JOINED,
     CONFERENCE_SUBJECT_CHANGED,
@@ -39,6 +31,12 @@ import {
     SET_PENDING_SUBJECT_CHANGE,
     SET_ROOM
 } from './actionTypes';
+import {
+    conferenceFailed,
+    conferenceWillLeave,
+    createConference,
+    setSubject
+} from './actions';
 import {
     _addLocalTracksToConference,
     _removeLocalTracksFromConference,
@@ -115,18 +113,17 @@ StateListenerRegistry.register(
         const {
             conference,
             maxReceiverVideoQuality,
-            preferredReceiverVideoQuality
+            preferredVideoQuality
         } = currentState;
-        const changedPreferredVideoQuality = preferredReceiverVideoQuality
-            !== previousState.preferredReceiverVideoQuality;
-        const changedMaxVideoQuality = maxReceiverVideoQuality
-            !== previousState.maxReceiverVideoQuality;
+        const changedPreferredVideoQuality
+            = preferredVideoQuality !== previousState.preferredVideoQuality;
+        const changedMaxVideoQuality = maxReceiverVideoQuality !== previousState.maxReceiverVideoQuality;
 
         if (changedPreferredVideoQuality || changedMaxVideoQuality) {
-            _setReceiverVideoConstraint(
-                conference,
-                preferredReceiverVideoQuality,
-                maxReceiverVideoQuality);
+            _setReceiverVideoConstraint(conference, preferredVideoQuality, maxReceiverVideoQuality);
+        }
+        if (changedPreferredVideoQuality) {
+            _setSenderVideoConstraint(conference, preferredVideoQuality);
         }
     });
 
@@ -255,14 +252,6 @@ function _connectionEstablished({ dispatch }, next, action) {
  * @returns {Object} The value returned by {@code next(action)}.
  */
 function _connectionFailed({ dispatch, getState }, next, action) {
-    // In the case of a split-brain error, reload early and prevent further
-    // handling of the action.
-    if (_isMaybeSplitBrainError(getState, action)) {
-        dispatch(reloadNow());
-
-        return;
-    }
-
     const result = next(action);
 
     if (typeof beforeUnloadHandler !== 'undefined') {
@@ -352,52 +341,6 @@ function _conferenceWillLeave() {
         window.removeEventListener('beforeunload', beforeUnloadHandler);
         beforeUnloadHandler = undefined;
     }
-}
-
-/**
- * Returns whether or not a CONNECTION_FAILED action is for a possible split
- * brain error. A split brain error occurs when at least two users join a
- * conference on different bridges. It is assumed the split brain scenario
- * occurs very early on in the call.
- *
- * @param {Function} getState - The redux function for fetching the current
- * state.
- * @param {Action} action - The redux action {@code CONNECTION_FAILED} which is
- * being dispatched in the specified {@code store}.
- * @private
- * @returns {boolean}
- */
-function _isMaybeSplitBrainError(getState, action) {
-    const { error } = action;
-    const isShardChangedError = error
-        && error.message === 'item-not-found'
-        && error.details
-        && error.details.shard_changed;
-
-    if (isShardChangedError) {
-        const state = getState();
-        const { timeEstablished } = state['features/base/connection'];
-        const { _immediateReloadThreshold } = state['features/base/config'];
-
-        const timeSinceConnectionEstablished
-            = timeEstablished && Date.now() - timeEstablished;
-        const reloadThreshold = typeof _immediateReloadThreshold === 'number'
-            ? _immediateReloadThreshold : 1500;
-
-        const isWithinSplitBrainThreshold = !timeEstablished
-            || timeSinceConnectionEstablished <= reloadThreshold;
-
-        sendAnalytics(createConnectionEvent('failed', {
-            ...error,
-            connectionEstablished: timeEstablished,
-            splitBrain: isWithinSplitBrainThreshold,
-            timeSinceConnectionEstablished
-        }));
-
-        return isWithinSplitBrainThreshold;
-    }
-
-    return false;
 }
 
 /**
@@ -493,6 +436,24 @@ function _setReceiverVideoConstraint(conference, preferred, max) {
 }
 
 /**
+ * Helper function for updating the preferred sender video constraint, based
+ * on the user preference.
+ *
+ * @param {JitsiConference} conference - The JitsiConference instance for the
+ * current call.
+ * @param {number} preferred - The user preferred max frame height.
+ * @returns {void}
+ */
+function _setSenderVideoConstraint(conference, preferred) {
+    if (conference) {
+        conference.setSenderVideoConstraint(preferred)
+            .catch(err => {
+                logger.error(`Changing sender resolution to ${preferred} failed - ${err} `);
+            });
+    }
+}
+
+/**
  * Notifies the feature base/conference that the action
  * {@code SET_ROOM} is being dispatched within a specific
  *  redux store.
@@ -561,12 +522,12 @@ function _syncReceiveVideoQuality({ getState }, next, action) {
     const {
         conference,
         maxReceiverVideoQuality,
-        preferredReceiverVideoQuality
+        preferredVideoQuality
     } = getState()['features/base/conference'];
 
     _setReceiverVideoConstraint(
         conference,
-        preferredReceiverVideoQuality,
+        preferredVideoQuality,
         maxReceiverVideoQuality);
 
     return next(action);
@@ -589,7 +550,10 @@ function _syncReceiveVideoQuality({ getState }, next, action) {
 function _trackAddedOrRemoved(store, next, action) {
     const track = action.track;
 
-    if (track && track.local) {
+    // TODO All track swapping should happen here instead of conference.js.
+    // Since we swap the tracks for the web client in conference.js, ignore
+    // presenter tracks here and do not add/remove them to/from the conference.
+    if (track && track.local && track.mediaType !== MEDIA_TYPE.PRESENTER) {
         return (
             _syncConferenceLocalTracksWithState(store, action)
                 .then(() => next(action)));
