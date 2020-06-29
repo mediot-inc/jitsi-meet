@@ -23,7 +23,7 @@ Should place _jitsi-maven-repository_ and _jitsi-meet-ios-sdk-releases_ besides 
 
 ## ios
 0. run `brew install coreutils`
-1. Checkout to latest tag in _jitsi-meet-ios-sdk-release_
+1. Checkout to branch `mediot-master` in _jitsi-meet-ios-sdk-release_
 2. Do `pod install` in _ios_ directory
 3. Bump version in _ios/sdk/src/Info.plist_
 4. Commit _ios/sdk/src/Info.plist_
