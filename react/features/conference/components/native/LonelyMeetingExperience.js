@@ -73,15 +73,15 @@ class LonelyMeetingExperience extends PureComponent<Props> {
         }
 
         return (
-            <View style = { styles.lonelyMeetingContainer }>
+            <View style={styles.lonelyMeetingContainer}>
                 <Text
-                    style = { [
+                    style={[
                         styles.lonelyMessage,
                         _styles.lonelyMessage
-                    ] }>
-                    { t('lonelyMeetingExperience.youAreAlone') }
+                    ]}>
+                    {t('lonelyMeetingExperience.youAreAlone')}
                 </Text>
-                { !_isInviteFunctionsDiabled && (
+                {/* { !_isInviteFunctionsDiabled && (
                     <TouchableOpacity
                         onPress = { this._onPress }
                         style = { [
@@ -100,7 +100,7 @@ class LonelyMeetingExperience extends PureComponent<Props> {
                             { t('lonelyMeetingExperience.button') }
                         </Text>
                     </TouchableOpacity>
-                ) }
+                ) } */}
             </View>
         );
     }
