@@ -11,7 +11,11 @@ import { connect } from '../../../base/redux';
 import { StyleType } from '../../../base/styles';
 // import { SharedDocumentButton } from '../../../etherpad';
 // import { InviteButton } from '../../../invite';
+// import { LobbyModeButton } from '../../../lobby/components/native';
 import { AudioRouteButton } from '../../../mobile/audio-mode';
+import { TileViewButton } from '../../../video-layout';
+// import { VideoShareButton } from '../../../youtube-player/components';
+// import MuteEveryoneButton from '../MuteEveryoneButton';
 
 // import { LiveStreamButton, RecordButton } from '../../../recording';
 // import { RoomLockButton } from '../../../room-lock';
@@ -21,6 +25,7 @@ import { TileViewButton } from '../../../video-layout';
 import AudioOnlyButton from './AudioOnlyButton';
 import MoreOptionsButton from './MoreOptionsButton';
 // import RaiseHandButton from './RaiseHandButton';
+// import ScreenSharingButton from './ScreenSharingButton.js';
 import ToggleCameraButton from './ToggleCameraButton';
 import styles from './styles';
 
@@ -128,6 +133,8 @@ class OverflowMenu extends PureComponent<Props, State> {
                 {/* <InviteButton { ...buttonProps } /> */}
                 <AudioOnlyButton { ...buttonProps } />
                 {/* <RaiseHandButton { ...buttonProps } /> */}
+                {/* <LobbyModeButton { ...buttonProps } /> */}
+                {/* <ScreenSharingButton { ...buttonProps } /> */}
                 <MoreOptionsButton { ...moreOptionsButtonProps } />
                 <Collapsible collapsed = { !showMore }>
                     <ToggleCameraButton { ...buttonProps } />
@@ -138,6 +145,8 @@ class OverflowMenu extends PureComponent<Props, State> {
                     {/* <ClosedCaptionButton { ...buttonProps } /> */}
                     {/* <SharedDocumentButton { ...buttonProps } /> */}
                     {/* <HelpButton { ...buttonProps } /> */}
+                    {/* <VideoShareButton { ...buttonProps } /> */}
+                    {/* <MuteEveryoneButton { ...buttonProps } /> */}
                 </Collapsible>
             </BottomSheet>
         );

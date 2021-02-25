@@ -63,6 +63,7 @@ export default class LocalVideo extends SmallVideo {
 
         this.addAudioLevelIndicator();
         this.updateIndicators();
+        this.updateStatusBar();
 
         this.container.onclick = this._onContainerClick;
     }
@@ -103,7 +104,7 @@ export default class LocalVideo extends SmallVideo {
         }
 
         this._renderDisplayName({
-            allowEditing: APP.store.getState()['features/base/jwt'].isGuest,
+            allowEditing: !config.disableProfile,
             displayNameSuffix: interfaceConfig.DEFAULT_LOCAL_DISPLAY_NAME,
             elementID: 'localDisplayName',
             participantID: this.id
@@ -276,9 +277,12 @@ export default class LocalVideo extends SmallVideo {
 
         // Ensure the video gets play() called on it. This may be necessary in the
         // case where the local video container was moved and re-attached, in which
-        // case video does not autoplay.
+        // case video does not autoplay. Also, set the playsinline attribute on the
+        // video element so that local video doesn't open in full screen by default
+        // in Safari browser on iOS.
         const video = this.container.querySelector('video');
 
+        video && video.setAttribute('playsinline', 'true');
         video && !config.testing?.noAutoPlayVideo && video.play();
     }
 }

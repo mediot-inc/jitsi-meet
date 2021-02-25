@@ -18,7 +18,8 @@ import {
 } from '../base/participants';
 import { MiddlewareRegistry, StateListenerRegistry } from '../base/redux';
 import { playSound, registerSound, unregisterSound } from '../base/sounds';
-import { isButtonEnabled, showToolbox } from '../toolbox';
+import { showToolbox } from '../toolbox/actions';
+import { isButtonEnabled } from '../toolbox/functions';
 
 import { SEND_MESSAGE, SET_PRIVATE_MESSAGE_RECIPIENT } from './actionTypes';
 import { addMessage, clearMessages, toggleChat } from './actions';
@@ -151,11 +152,9 @@ StateListenerRegistry.register(
  * @returns {void}
  */
 function _addChatMsgListener(conference, store) {
-    if ((typeof interfaceConfig === 'object' && interfaceConfig.filmStripOnly)
-        || (typeof APP !== 'undefined' && !isButtonEnabled('chat'))
+    if ((typeof APP !== 'undefined' && !isButtonEnabled('chat'))
         || store.getState()['features/base/config'].iAmRecorder) {
-        // We don't register anything on web if we're in filmStripOnly mode, or
-        // the chat button is not enabled in interfaceConfig.
+        // We don't register anything on web if the chat button is not enabled in interfaceConfig
         // or we are in iAmRecorder mode
         return;
     }
