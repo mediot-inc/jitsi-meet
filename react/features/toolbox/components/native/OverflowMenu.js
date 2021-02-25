@@ -13,7 +13,7 @@ import { StyleType } from '../../../base/styles';
 // import { InviteButton } from '../../../invite';
 // import { LobbyModeButton } from '../../../lobby/components/native';
 import { AudioRouteButton } from '../../../mobile/audio-mode';
-import { TileViewButton } from '../../../video-layout';
+// import { TileViewButton } from '../../../video-layout';
 // import { VideoShareButton } from '../../../youtube-player/components';
 // import MuteEveryoneButton from '../MuteEveryoneButton';
 
